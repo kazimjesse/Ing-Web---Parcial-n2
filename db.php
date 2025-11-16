@@ -1,7 +1,9 @@
 <?php
+
 class Database {
+
     private $host = "localhost";
-    private $dbname = "mi_base";
+    private $dbname = "parcial_2";
     private $user = "root";
     private $pass = "";
     public $conn;
@@ -9,55 +11,68 @@ class Database {
     public function conectar() {
         try {
             $this->conn = new PDO(
-                "mysql:host=".$this->host.";dbname=".$this->dbname.";charset=utf8",
+                "mysql:host={$this->host};dbname={$this->dbname};charset=utf8",
                 $this->user,
                 $this->pass
             );
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            return $this->conn;
-
         } catch (PDOException $e) {
             die("Error de conexión: " . $e->getMessage());
         }
+
+        return $this->conn;
     }
 
-    // Obtener países
+    /*
+       OBTENER PAISES Y TEMAS
+    */
+
     public function getPaises() {
-        $sql = "SELECT id, nombre FROM paises ORDER BY nombre";
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->conn->prepare("SELECT ID, Nombre FROM pais ORDER BY Nombre ASC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Obtener temas
     public function getTemas() {
-        $sql = "SELECT id, tema FROM temas_interes ORDER BY tema";
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->conn->prepare("SELECT ID, Nombre FROM temas ORDER BY Nombre ASC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Guardar el formulario
-    public function guardarFormulario($data) {
-        $sql = "INSERT INTO formulario 
-            (nombre, apellido, edad, sexo, pais_id, nacionalidad, correo, celular, observaciones) 
-            VALUES 
-            (:nombre, :apellido, :edad, :sexo, :pais_id, :nacionalidad, :correo, :celular, :observaciones)";
-        
+    /* 
+       GUARDAR FORMULARIO
+     */
+
+    public function guardarInscriptor($data) {
+        $sql = "INSERT INTO inscriptor 
+                (Nombre, Apellido, Edad, Sexo, Pais_Residente, Nacionalidad, 
+                 Correo, Telefono, Observaciones, Fecha_Registro)
+                VALUES
+                (:Nombre, :Apellido, :Edad, :Sexo, :Pais_Residente, :Nacionalidad,
+                 :Correo, :Telefono, :Observaciones, :Fecha_Registro)";
+
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($data);
 
         return $this->conn->lastInsertId();
     }
 
-    // Guardar temas seleccionados
-    public function guardarTemasFormulario($formulario_id, $tema_id) {
-        $sql = "INSERT INTO formulario_temas (formulario_id, tema_id) VALUES (:fid, :tid)";
+    /* 
+       GUARDAR TEMAS DEL INSCRIPTOR
+     */
+
+    public function guardarTemas($id_inscriptor, $temas) {
+        $sql = "INSERT INTO `inscriptor-tema` (ID_Inscriptor, ID_Tema)
+                VALUES (:ID_Inscriptor, :ID_Tema)";
+
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([
-            ':fid' => $formulario_id,
-            ':tid' => $tema_id
-        ]);
+
+        foreach ($temas as $tema) {
+            $stmt->execute([
+                ":ID_Inscriptor" => $id_inscriptor,
+                ":ID_Tema" => $tema
+            ]);
+        }
     }
 }
-?>
+
